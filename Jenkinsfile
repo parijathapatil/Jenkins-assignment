@@ -16,16 +16,17 @@ pipeline {
 
         stage('Test Job') {
             when {
-                branch 'develop'  // Runs the Test Job only when the develop branch is pushed
+                branch 'develop'
             }
             steps {
                 node('Test-Node') {
                     script {
-                        // Copy files to the Test Node
+                        // Ensure the workspace is created and files are copied to the Test Node
                         echo "Copying files to Test Node..."
                         sh """
-                            rm -rf ${TEST_NODE_PATH}/*
-                            cp -r * ${TEST_NODE_PATH}/
+                            mkdir -p ${TEST_NODE_PATH}/workspace/Deploy-Pipeline
+                            rm -rf ${TEST_NODE_PATH}/workspace/Deploy-Pipeline/*
+                            cp -r * ${TEST_NODE_PATH}/workspace/Deploy-Pipeline/
                         """
                     }
                 }
@@ -34,11 +35,11 @@ pipeline {
 
         stage('Prod Job') {
             when {
-                branch 'master'  // Runs the Prod Job only when the master branch is pushed
+                branch 'master'
             }
             steps {
                 script {
-                    // Run Prod Job only if the Test Job was successful
+                    // Only run the Prod Job if the Test Job succeeded
                     echo "Running Prod Job..."
                     node('Prod-Node') {
                         sh """
