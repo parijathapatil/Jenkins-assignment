@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/hshar/website.git'
+                git 'https://github.com/parijathapatil/Jenkins-assignment.git'
             }
         }
         stage('Build') {
