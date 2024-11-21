@@ -15,10 +15,14 @@ pipeline {
         }
 
         stage('Test Job') {
+            when {
+                branch 'develop'  // Runs the Test Job only when the develop branch is pushed
+            }
             steps {
                 node('Test-Node') {
                     script {
                         // Copy files to the Test Node
+                        echo "Copying files to Test Node..."
                         sh """
                             rm -rf ${TEST_NODE_PATH}/*
                             cp -r * ${TEST_NODE_PATH}/
@@ -30,12 +34,12 @@ pipeline {
 
         stage('Prod Job') {
             when {
-                branch 'develop'  // Only runs if the develop branch is pushed
+                branch 'master'  // Runs the Prod Job only when the master branch is pushed
             }
             steps {
                 script {
-                    // Run Prod Job only if Test Job was successful
-                    currentBuild.result = 'SUCCESS'
+                    // Run Prod Job only if the Test Job was successful
+                    echo "Running Prod Job..."
                     node('Prod-Node') {
                         sh """
                             rm -rf ${PROD_NODE_PATH}/*
