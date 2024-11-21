@@ -2,25 +2,19 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'website-container'
-        DOCKER_REGISTRY = 'localhost'
+        GIT_REPO = 'https://github.com/parijathapatil/Jenkins-assignment'
+        FOLDER_PATH = '/path/to/your/folder'  // Set the folder where you want to pull the Git content
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/parijathapatil/Jenkins-assignment.git'
-            }
-        }
-        stage('Build') {
+        stage('Pull Git Content') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'master') {
-                        echo 'Building and deploying to port 82...'
-                        sh 'docker run -d -p 82:80 --name website-container website-container'
-                    } else if (env.BRANCH_NAME == 'develop') {
-                        echo 'Building only, not deploying...'
-                    }
+                    // Clean up the folder if it exists before pulling fresh content
+                    sh """
+                    rm -rf ${FOLDER_PATH}/*  // Remove existing content
+                    git clone ${GIT_REPO} ${FOLDER_PATH}  // Clone the repository into the specified folder
+                    """
                 }
             }
         }
@@ -28,11 +22,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed successfully."
+            echo 'Git content pulled successfully to the specified folder.'
         }
-
         failure {
-            echo "Pipeline failed."
+            echo 'Pipeline failed.'
         }
     }
 }
