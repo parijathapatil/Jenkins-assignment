@@ -2,24 +2,45 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'website-container'
-        DOCKER_REGISTRY = 'localhost'
+        GIT_REPO = 'https://github.com/parijathapatil/Jenkins-assignment'
+        TEST_NODE_PATH = '/var/jenkins/Test-Node'
+        PROD_NODE_PATH = '/var/jenkins/Prod-Node'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/parijathapatil/Jenkins-assignment.git'
+                git branch: 'develop', url: "${GIT_REPO}"
             }
         }
-        stage('Build') {
+
+        stage('Test Job') {
+            steps {
+                node('Test-Node') {
+                    script {
+                        // Copy files to the Test Node
+                        sh """
+                            rm -rf ${TEST_NODE_PATH}/*
+                            cp -r * ${TEST_NODE_PATH}/
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Prod Job') {
+            when {
+                branch 'develop'  // Only runs if the develop branch is pushed
+            }
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'master') {
-                        echo 'Building and deploying to port 82...'
-                        sh 'docker run -d -p 82:80 --name website-container website-container'
-                    } else if (env.BRANCH_NAME == 'develop') {
-                        echo 'Building only, not deploying...'
+                    // Run Prod Job only if Test Job was successful
+                    currentBuild.result = 'SUCCESS'
+                    node('Prod-Node') {
+                        sh """
+                            rm -rf ${PROD_NODE_PATH}/*
+                            cp -r * ${PROD_NODE_PATH}/
+                        """
                     }
                 }
             }
@@ -28,11 +49,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed successfully."
+            echo 'Pipeline completed successfully!'
         }
-
         failure {
-            echo "Pipeline failed."
+            echo 'Pipeline failed!'
         }
     }
 }
